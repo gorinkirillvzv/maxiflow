@@ -363,6 +363,9 @@ export default function MiniAppEntry() {
   if (configState.kind === "custom") {
     const isPreview =
       typeof window !== "undefined" && new URL(window.location.href).searchParams.get("preview") === "1";
+    const isDebug =
+      typeof window !== "undefined" && new URL(window.location.href).searchParams.get("debug") === "1";
+    if (isDebug) return <MaxSdkDebug />;
     return (
       <MiniAppRenderer
         config={configState.config}
@@ -519,4 +522,50 @@ function btnStyle(variant: "primary" | "ghost"): React.CSSProperties {
   const base: React.CSSProperties = { padding: "14px 18px", borderRadius: 12, border: 0, fontSize: 15, fontWeight: 600, cursor: "pointer", width: "100%" };
   if (variant === "primary") return { ...base, background: "#7C5CFF", color: "#fff" };
   return { ...base, background: "transparent", color: "#7C5CFF", border: "1px solid rgba(124,92,255,.4)" };
+}
+
+// ============================================================================
+// Debug-страница для инспекции MAX WebApp SDK — /m/<bot>?debug=1
+// Открыть в MAX на телефоне, сделать скриншот. Ищем метод типа sendData /
+// openBotChat / startBot, который откроет диалог с ботом без экрана «Начать».
+// ============================================================================
+function MaxSdkDebug() {
+  const [info, setInfo] = useState<string>("Загружаю SDK…");
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      await loadSdk();
+      if (cancelled) return;
+      const w = window as unknown as { WebApp?: Record<string, unknown> };
+      const app = w.WebApp;
+      if (!app) { setInfo("window.WebApp = undefined (SDK не загрузился)"); return; }
+      const rows: string[] = [];
+      rows.push(`typeof WebApp = ${typeof app}`);
+      rows.push("");
+      rows.push("=== keys(WebApp) ===");
+      for (const k of Object.keys(app)) {
+        const v = (app as Record<string, unknown>)[k];
+        const t = typeof v;
+        if (t === "function") rows.push(`fn  ${k}()`);
+        else if (v && typeof v === "object") rows.push(`obj ${k} = ${JSON.stringify(v).slice(0, 120)}`);
+        else rows.push(`val ${k} = ${String(v).slice(0, 60)}`);
+      }
+      rows.push("");
+      rows.push("=== version/platform ===");
+      rows.push(String((app as Record<string, unknown>).version ?? "no version"));
+      rows.push(String((app as Record<string, unknown>).platform ?? "no platform"));
+      rows.push("");
+      rows.push("=== initDataUnsafe ===");
+      rows.push(JSON.stringify((app as Record<string, unknown>).initDataUnsafe ?? null, null, 2).slice(0, 800));
+      setInfo(rows.join("\n"));
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return (
+    <pre style={{
+      whiteSpace: "pre-wrap", wordBreak: "break-all",
+      padding: 16, fontSize: 12, fontFamily: "ui-monospace, monospace",
+      background: "#0f0f14", color: "#e5e5e8", minHeight: "100vh", margin: 0,
+    }}>{info}</pre>
+  );
 }
