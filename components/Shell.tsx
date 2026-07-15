@@ -231,7 +231,7 @@ function TopBar({ title, breadcrumbs, rightSlot, onBurger }: {
         <Icon name="menu" size={18} />
       </button>
 
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
         {breadcrumbs && breadcrumbs.length > 0 && (
           <div
             className="kk-breadcrumbs type-caption"
@@ -242,16 +242,19 @@ function TopBar({ title, breadcrumbs, rightSlot, onBurger }: {
               color: "var(--n-500)",
               lineHeight: 1,
               marginBottom: 4,
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis",
             }}
           >
             {breadcrumbs.map((b, i) => (
               <React.Fragment key={i}>
                 {i > 0 && (
-                  <span aria-hidden style={{ opacity: 0.6, fontSize: 10, lineHeight: 1 }}>
+                  <span aria-hidden style={{ opacity: 0.6, fontSize: 10, lineHeight: 1, flexShrink: 0 }}>
                     •
                   </span>
                 )}
-                <span>{b}</span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{b}</span>
               </React.Fragment>
             ))}
           </div>
