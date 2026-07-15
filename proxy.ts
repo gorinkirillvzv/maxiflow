@@ -45,7 +45,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   // Supabase Realtime через WSS. Жёстче без перехода на nonce-стратегию не выйдет.
   "Content-Security-Policy": [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mc.yandex.ru https://yastatic.net",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mc.yandex.ru https://yastatic.net https://st.max.ru",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https: https://mc.yandex.ru",
     "font-src 'self' data:",
