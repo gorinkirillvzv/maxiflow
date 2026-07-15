@@ -371,6 +371,9 @@ export default function FunnelEditorPage({ params }: { params: Promise<{ id: str
       });
       if (!r.ok) throw new Error((await r.json()).error || "Ошибка");
       setStatus(silent ? "Сохранено · auto" : "Сохранено");
+      // Локально обновляем draft_updated_at — иначе кнопка «Опубликовать» не
+      // засвечивается после автосейва (hasUnpublishedChanges остаётся false).
+      setDraftUpdatedAt(new Date().toISOString());
       // обновляем список — имя/триггер/дефолт могли измениться
       const list: FunnelMeta[] = (await fetch(`/api/funnel?bot_id=${botId}`).then((x) => x.json())).funnels ?? [];
       setFunnels(list);
@@ -613,7 +616,7 @@ export default function FunnelEditorPage({ params }: { params: Promise<{ id: str
                   onClick={(e) => { e.stopPropagation(); clickNode(n.id); }}
                   style={{
                     position: "absolute", left: n.x, top: n.y, width: NODE_W, minHeight: nodeHeight(n),
-                    background: "#fff", borderRadius: 12, cursor: "grab",
+                    background: "var(--n-0)", borderRadius: 12, cursor: "grab",
                     boxShadow: isSel ? `0 0 0 2px ${k.color}, var(--shadow-2)`
                       : isConn ? "0 0 0 2px var(--brand-amber)" : "var(--shadow-card)",
                   }}>
@@ -646,7 +649,7 @@ export default function FunnelEditorPage({ params }: { params: Promise<{ id: str
                         style={{
                           position: "absolute", right: -9, top: PORT_H / 2 - 9, width: 18, height: 18,
                           borderRadius: 99, border: `2px solid ${p.color ?? k.color}`,
-                          background: hasEdge(n.id, p.id) ? (p.color ?? k.color) : "#fff",
+                          background: hasEdge(n.id, p.id) ? (p.color ?? k.color) : "var(--n-0)",
                           color: hasEdge(n.id, p.id) ? "#fff" : (p.color ?? k.color),
                           cursor: "crosshair", padding: 0, fontSize: 11, lineHeight: 1,
                         }}>+</button>
@@ -784,7 +787,7 @@ export default function FunnelEditorPage({ params }: { params: Promise<{ id: str
 
               {/* Дожим по бездействию — для нод с кнопками */}
               {(sel.type === "message" || sel.type === "buttons") && (sel.buttons?.length ?? 0) > 0 && (
-                <div style={{ marginTop: 14, padding: "10px 12px", background: "#FFF6E5", borderRadius: 8, border: "1px solid #FFE0A6" }}>
+                <div style={{ marginTop: 14, padding: "10px 12px", background: "var(--warning-12)", borderRadius: 8, border: "1px solid var(--warning)" }}>
                   <div className="kk-row" style={{ alignItems: "center", marginBottom: 6 }}>
                     <input type="checkbox" id={`inact-${sel.id}`}
                       checked={(sel.inactivityValue ?? 0) > 0}
