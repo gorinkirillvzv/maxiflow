@@ -2,18 +2,21 @@
 // Вместо блочного конструктора — одна форма: заголовок + описание + CTA.
 // Рендерер тонкий, дизайн зашит в компонент /m/[bot].
 
-export type MiniAppCtaKind = "bot" | "channel" | "url";
+export type MiniAppCtaKind = "bot" | "channel" | "url" | "phone";
 
 export interface MiniAppConfig {
   title: string;               // заголовок (h1)
   description: string;         // подзаголовок/описание — multiline
   ctaText: string;             // текст на кнопке
-  ctaKind: MiniAppCtaKind;     // куда ведёт: бот / канал / произвольный URL
+  ctaKind: MiniAppCtaKind;     // куда ведёт: бот / канал / URL / сбор телефона
   ctaStartCommand?: string;    // для kind='bot' — payload в ?start=
   ctaUrl?: string;             // для kind='url' — целевой URL
   imageUrl?: string;           // hero-картинка сверху (опц)
   brandColor?: string;         // акцентный цвет (default var(--brand-violet) #5B47FB)
   theme?: "dark" | "light";    // светлая/тёмная тема (default dark)
+  // для kind='phone': текст успеха + опциональный follow-up (открыть бота с payload после сохранения)
+  successMessage?: string;
+  phoneFollowUpStartCommand?: string;  // если задано — после сохранения телефона откроем бот с этим start
 }
 
 export const DEFAULT_CONFIG: MiniAppConfig = {

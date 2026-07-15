@@ -7,15 +7,22 @@
 // Дизайн намеренно изолирован префиксом .mini-app-* — если рендерится в
 // iframe редактора внутри Shell кабинета, стили не конфликтуют.
 
-import { useMemo, type MouseEvent } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import { buildCtaUrl, type MiniAppConfig } from "@/lib/mini-app/config";
 
 interface Props {
   config: MiniAppConfig;
+  botId?: string;   // нужен для kind='phone', чтобы сохранить телефон под правильный бот
   botUsername?: string;
   channelLink?: string | null;
   preview?: boolean;
 }
+
+type PhoneState =
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "done" }
+  | { kind: "error"; message: string };
 
 const DEFAULT_BRAND = "#5B47FB"; // var(--brand-violet)
 
@@ -60,6 +67,7 @@ function openViaMaxSdk(url: string): boolean {
 
 export default function MiniAppRenderer({
   config,
+  botId,
   botUsername,
   channelLink,
   preview = false,
@@ -78,8 +86,71 @@ export default function MiniAppRenderer({
 
   const descLines = (config.description || "").split("\n");
 
+  const [phoneState, setPhoneState] = useState<PhoneState>({ kind: "idle" });
+
+  // Kind='phone': запрашиваем номер через WebApp.requestContact() и шлём на /api/mini/contact.
+  async function handlePhone(): Promise<void> {
+    if (phoneState.kind === "loading") return;
+    if (preview) {
+      setPhoneState({ kind: "error", message: "Preview: реальный запрос номера доступен только в MAX." });
+      return;
+    }
+    const w = window as unknown as {
+      WebApp?: {
+        requestContact?: () => Promise<{ phone: string; authDate: string; hash: string }>;
+        initDataUnsafe?: { user?: { id?: number } };
+      };
+    };
+    const sdk = w.WebApp;
+    if (!sdk?.requestContact) {
+      setPhoneState({ kind: "error", message: "Откройте страницу в приложении MAX, чтобы поделиться контактом." });
+      return;
+    }
+    const uid = sdk.initDataUnsafe?.user?.id;
+    if (!uid) {
+      setPhoneState({ kind: "error", message: "Нет данных пользователя." });
+      return;
+    }
+    setPhoneState({ kind: "loading" });
+    try {
+      const contact = await sdk.requestContact();
+      const r = await fetch("/api/mini/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bot_id: botId,
+          user_id: uid,
+          phone: contact.phone,
+          auth_date: contact.authDate,
+          hash: contact.hash,
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Не удалось сохранить");
+      setPhoneState({ kind: "done" });
+      // Follow-up: если задана команда — сразу открываем бота с этим payload
+      const followUp = config.phoneFollowUpStartCommand?.trim();
+      if (followUp && botUsername) {
+        const followUrl = `https://max.ru/${botUsername}?start=${encodeURIComponent(followUp)}`;
+        if (!openViaMaxSdk(followUrl)) window.location.href = followUrl;
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Ошибка";
+      // Юзер отменил запрос — не считаем это ошибкой
+      if (/deny|denied|cancel/i.test(msg)) {
+        setPhoneState({ kind: "idle" });
+      } else {
+        setPhoneState({ kind: "error", message: msg });
+      }
+    }
+  }
+
   function handleCta(e: MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
+    if (config.ctaKind === "phone") {
+      void handlePhone();
+      return;
+    }
     if (!url) return;
     // Клиент-сайд защита от XSS: даже если через API просочился javascript:-URL,
     // здесь мы отказываемся его открывать. Whitelist: http(s) / mailto / tel / max://
@@ -127,14 +198,25 @@ export default function MiniAppRenderer({
             type="button"
             className="mini-app-cta"
             onClick={handleCta}
+            disabled={phoneState.kind === "loading" || phoneState.kind === "done"}
             style={{
               background: brand,
               boxShadow: `0 20px 40px -12px ${hexToRgba(brand, 0.55)}, 0 6px 16px -6px ${hexToRgba(brand, 0.4)}`,
+              opacity: (phoneState.kind === "loading" || phoneState.kind === "done") ? 0.7 : 1,
             }}
           >
-            {config.ctaText || "Открыть"}
+            {phoneState.kind === "loading" ? "Отправляем…"
+              : phoneState.kind === "done" ? "✓ Номер сохранён"
+              : (config.ctaText || "Открыть")}
           </button>
         </div>
+
+        {config.ctaKind === "phone" && phoneState.kind === "done" && config.successMessage ? (
+          <div className="mini-app-success">{config.successMessage}</div>
+        ) : null}
+        {phoneState.kind === "error" ? (
+          <div className="mini-app-error" role="alert">{phoneState.message}</div>
+        ) : null}
 
         {!preview ? (
           <footer className="mini-app-footer">Powered by Maxiflow</footer>
@@ -263,5 +345,32 @@ const CSS = `
   font-size: 12px;
   opacity: 0.4;
   letter-spacing: 0.01em;
+}
+.mini-app-success {
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(0, 185, 86, 0.18);
+  color: #7CE0A5;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+}
+.mini-app-light .mini-app-success {
+  background: rgba(0, 185, 86, 0.12);
+  color: #0A7A3C;
+}
+.mini-app-error {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(229, 72, 77, 0.14);
+  color: #FFB0B0;
+  font-size: 13.5px;
+  line-height: 1.4;
+  text-align: center;
+}
+.mini-app-light .mini-app-error {
+  color: #B12E1A;
 }
 `;

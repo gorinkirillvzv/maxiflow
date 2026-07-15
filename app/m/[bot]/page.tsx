@@ -155,7 +155,7 @@ function readMaxCtx(): MaxCtx {
 
 type ConfigState =
   | { kind: "loading" }
-  | { kind: "custom"; config: MiniAppConfig; username: string; channelLink: string | null }
+  | { kind: "custom"; config: MiniAppConfig; botId: string; username: string; channelLink: string | null }
   | { kind: "legacy" };
 
 export default function MiniAppEntry() {
@@ -230,6 +230,7 @@ export default function MiniAppEntry() {
           setConfigState({
             kind: "custom",
             config: cfg as MiniAppConfig,
+            botId: d.bot_id,
             username: d.username,
             channelLink: d.channel_link ?? null,
           });
@@ -369,6 +370,7 @@ export default function MiniAppEntry() {
     return (
       <MiniAppRenderer
         config={configState.config}
+        botId={configState.botId}
         botUsername={configState.username}
         channelLink={configState.channelLink}
         preview={isPreview}

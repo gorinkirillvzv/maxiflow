@@ -399,6 +399,12 @@ function EditorLayout({
                   data-active={config.ctaKind === "url"}
                   onClick={() => onPatch("ctaKind", "url")}
                 >Произвольный URL</button>
+                <button
+                  type="button"
+                  className="kk-tab"
+                  data-active={config.ctaKind === "phone"}
+                  onClick={() => onPatch("ctaKind", "phone")}
+                >Собрать телефон</button>
               </div>
             </div>
 
@@ -453,6 +459,39 @@ function EditorLayout({
                     </span>
                   </>
                 )}
+              </div>
+            )}
+
+            {config.ctaKind === "phone" && (
+              <div className="kk-col" style={{ gap: 10 }}>
+                <div className="kk-xs kk-muted">
+                  MAX покажет юзеру нативный попап «Поделиться номером». После согласия — номер
+                  сохранится в подписчиках. Работает только в MAX (в браузере — заглушка).
+                </div>
+                <div className="kk-col" style={{ gap: 6 }}>
+                  <label className="kk-label">Сообщение после сохранения</label>
+                  <textarea
+                    className="kk-input"
+                    rows={2}
+                    value={config.successMessage ?? ""}
+                    onChange={(e) => onPatch("successMessage", e.target.value)}
+                    placeholder="Спасибо! Мы свяжемся с вами в течение часа."
+                  />
+                </div>
+                <div className="kk-col" style={{ gap: 6 }}>
+                  <label className="kk-label">
+                    Start-команда для follow-up бота (опц.)
+                  </label>
+                  <input
+                    className="kk-input"
+                    value={config.phoneFollowUpStartCommand ?? ""}
+                    onChange={(e) => onPatch("phoneFollowUpStartCommand", e.target.value)}
+                    placeholder="например: after_phone"
+                  />
+                  <div className="kk-xs kk-muted">
+                    Если задано — сразу после сохранения номера откроем бота с этим payload.
+                  </div>
+                </div>
               </div>
             )}
           </div>

@@ -54,12 +54,14 @@ export async function PATCH(request: Request) {
     title: typeof raw.title === "string" ? raw.title.slice(0, 200) : "",
     description: typeof raw.description === "string" ? raw.description.slice(0, 2000) : "",
     ctaText: typeof raw.ctaText === "string" ? raw.ctaText.slice(0, 80) : "",
-    ctaKind: raw.ctaKind === "channel" || raw.ctaKind === "url" ? raw.ctaKind : "bot",
+    ctaKind: (["channel", "url", "phone", "bot"].includes(raw.ctaKind as string) ? raw.ctaKind : "bot") as "bot" | "channel" | "url" | "phone",
     ctaStartCommand: typeof raw.ctaStartCommand === "string" ? raw.ctaStartCommand.slice(0, 200) : undefined,
     ctaUrl: safeUrl(raw.ctaUrl),
     imageUrl: safeUrl(raw.imageUrl),
     brandColor: typeof raw.brandColor === "string" && /^#[0-9a-f]{3,8}$/i.test(raw.brandColor) ? raw.brandColor : undefined,
     theme: raw.theme === "light" ? "light" : "dark",
+    successMessage: typeof raw.successMessage === "string" ? raw.successMessage.slice(0, 500) : undefined,
+    phoneFollowUpStartCommand: typeof raw.phoneFollowUpStartCommand === "string" ? raw.phoneFollowUpStartCommand.slice(0, 200) : undefined,
   };
 
   // RLS пропустит update только если бот принадлежит tenant текущего пользователя.
