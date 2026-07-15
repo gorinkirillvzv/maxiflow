@@ -1,0 +1,262 @@
+/* --------------------------------------------------------------------------
+ * lp.css — public landing page styles.
+ *
+ * Scope: served on /l/[slug] (and preview). Fully isolated from the admin
+ * cabinet — no `kk-*` classes, no `--n-*` tokens. Uses its own `--lp-*` vars
+ * so tenants can override per landing without touching admin styles.
+ *
+ * Blocks reference these primitives via className. Each block may add its own
+ * scoped rules inside /components/landing-blocks/<type>/Renderer.tsx.
+ * -------------------------------------------------------------------------- */
+
+:root {
+  /* Brand tokens — mirror kaskad admin so images/CTA feel cohesive. */
+  --brand-violet: #5B47FB;
+  --brand-violet-hover: #4a37e6;
+  --brand-violet-soft: rgba(91, 71, 251, 0.08);
+
+  /* Neutral scale used by public pages. */
+  --ink: #15141C;
+  --ink-soft: #2b2a37;
+  --muted: #6b7280;
+  --muted-2: #9ca3af;
+  --line: #e5e7eb;
+  --line-soft: #f1f2f5;
+
+  /* Public-page tokens (`--lp-*`). Tenants override these via inline <style>. */
+  --lp-bg: #ffffff;
+  --lp-fg: var(--ink);
+  --lp-muted: var(--muted);
+  --lp-accent: var(--brand-violet);
+  --lp-accent-fg: #ffffff;
+  --lp-accent-hover: var(--brand-violet-hover);
+  --lp-surface: #ffffff;
+  --lp-surface-2: #f7f7fb;
+  --lp-line: var(--line);
+  --lp-radius-sm: 8px;
+  --lp-radius: 14px;
+  --lp-radius-lg: 22px;
+  --lp-shadow: 0 6px 24px rgba(15, 18, 22, 0.06);
+  --lp-shadow-lg: 0 18px 48px rgba(15, 18, 22, 0.12);
+
+  /* Typography — matches admin body font when Onest is loaded. */
+  --lp-font: var(--font-onest, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif);
+}
+
+/* --------------------------------------------------------------------------
+ * Layout primitives
+ * -------------------------------------------------------------------------- */
+
+.lp-page {
+  background: var(--lp-bg);
+  color: var(--lp-fg);
+  font-family: var(--lp-font);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+.lp-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.lp-container--wide {
+  max-width: 960px;
+}
+
+.lp-container--full {
+  max-width: 100%;
+  padding: 0;
+}
+
+.lp-block {
+  margin: 40px 0;
+}
+
+.lp-block:first-child {
+  margin-top: 24px;
+}
+
+.lp-block:last-child {
+  margin-bottom: 24px;
+}
+
+/* Accent-backgrounded blocks (hero / cta variants) bleed to page edges. */
+.lp-block--bleed {
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 56px 20px;
+}
+
+.lp-block--bleed .lp-container {
+  padding: 0;
+}
+
+/* --------------------------------------------------------------------------
+ * Typography
+ * -------------------------------------------------------------------------- */
+
+.lp-h1 {
+  font-size: clamp(28px, 5vw, 40px);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--lp-fg);
+  margin: 0 0 16px;
+}
+
+.lp-h2 {
+  font-size: clamp(22px, 3.5vw, 28px);
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--lp-fg);
+  margin: 0 0 12px;
+}
+
+.lp-h3 {
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--lp-fg);
+  margin: 0 0 8px;
+}
+
+.lp-lead {
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--lp-muted);
+  margin: 0 0 24px;
+}
+
+.lp-text {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--lp-fg);
+  margin: 0 0 16px;
+}
+
+.lp-text a {
+  color: var(--lp-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.lp-muted {
+  color: var(--lp-muted);
+}
+
+.lp-align-left { text-align: left; }
+.lp-align-center { text-align: center; }
+.lp-align-right { text-align: right; }
+
+/* --------------------------------------------------------------------------
+ * Buttons
+ * -------------------------------------------------------------------------- */
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 22px;
+  min-height: 48px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--lp-accent);
+  color: var(--lp-accent-fg);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+  box-shadow: 0 6px 18px rgba(91, 71, 251, 0.25);
+}
+
+.lp-btn:hover {
+  background: var(--lp-accent-hover);
+  transform: translateY(-1px);
+}
+
+.lp-btn:active {
+  transform: translateY(0);
+}
+
+.lp-btn--lg {
+  padding: 16px 26px;
+  min-height: 54px;
+  font-size: 17px;
+}
+
+.lp-btn--ghost {
+  background: transparent;
+  color: var(--lp-accent);
+  box-shadow: none;
+  border: 1px solid var(--lp-accent);
+}
+
+.lp-btn--ghost:hover {
+  background: var(--brand-violet-soft);
+}
+
+/* --------------------------------------------------------------------------
+ * Surfaces / cards
+ * -------------------------------------------------------------------------- */
+
+.lp-card {
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-line);
+  border-radius: var(--lp-radius);
+  padding: 20px;
+  box-shadow: var(--lp-shadow);
+}
+
+.lp-card--soft {
+  background: var(--lp-surface-2);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.lp-media {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--lp-radius);
+  object-fit: cover;
+}
+
+.lp-media--narrow { max-width: 480px; margin: 0 auto; }
+.lp-media--wide { max-width: 100%; }
+.lp-media--full { border-radius: 0; }
+
+/* --------------------------------------------------------------------------
+ * Utility: grid used by features
+ * -------------------------------------------------------------------------- */
+
+.lp-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.lp-grid--1 { grid-template-columns: 1fr; }
+
+@media (min-width: 640px) {
+  .lp-grid--2 { grid-template-columns: repeat(2, 1fr); }
+  .lp-grid--3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* --------------------------------------------------------------------------
+ * Focus ring — accessible across accent backgrounds.
+ * -------------------------------------------------------------------------- */
+
+.lp-page :focus-visible {
+  outline: 3px solid var(--lp-accent);
+  outline-offset: 2px;
+  border-radius: var(--lp-radius-sm);
+}

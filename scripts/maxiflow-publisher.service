@@ -1,0 +1,7 @@
+[Unit]
+Description=Maxiflow — публикатор отложенных постов
+After=max-cabinet.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /opt/kaskad/scripts/publish-scheduled.sh
