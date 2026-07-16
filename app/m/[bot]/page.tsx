@@ -541,24 +541,40 @@ function MaxSdkDebug() {
       const w = window as unknown as { WebApp?: Record<string, unknown> };
       const app = w.WebApp;
       if (!app) { setInfo("window.WebApp = undefined (SDK не загрузился)"); return; }
+      // Инициируем SDK и ждём — часть методов регистрируется после ready/expand
+      try { (app as { ready?: () => void }).ready?.(); } catch { /* ignore */ }
+      try { (app as { expand?: () => void }).expand?.(); } catch { /* ignore */ }
+      await new Promise((r) => setTimeout(r, 500));
+
       const rows: string[] = [];
       rows.push(`typeof WebApp = ${typeof app}`);
+      rows.push(`version = ${String((app as Record<string, unknown>).version ?? "no version")}`);
+      rows.push(`platform = ${String((app as Record<string, unknown>).platform ?? "no platform")}`);
       rows.push("");
-      rows.push("=== keys(WebApp) ===");
-      for (const k of Object.keys(app)) {
-        const v = (app as Record<string, unknown>)[k];
+      // Все свойства включая non-enumerable (getOwnPropertyNames + прототип)
+      const collected = new Set<string>();
+      let obj: unknown = app;
+      while (obj && obj !== Object.prototype) {
+        for (const k of Object.getOwnPropertyNames(obj)) collected.add(k);
+        obj = Object.getPrototypeOf(obj);
+      }
+      rows.push(`=== all props (${collected.size}) ===`);
+      const sorted = Array.from(collected).sort();
+      for (const k of sorted) {
+        if (k === "constructor") continue;
+        let v: unknown; try { v = (app as Record<string, unknown>)[k]; } catch { v = "[getter threw]"; }
         const t = typeof v;
         if (t === "function") rows.push(`fn  ${k}()`);
-        else if (v && typeof v === "object") rows.push(`obj ${k} = ${JSON.stringify(v).slice(0, 120)}`);
+        else if (v && typeof v === "object") rows.push(`obj ${k} = ${JSON.stringify(v).slice(0, 100)}`);
         else rows.push(`val ${k} = ${String(v).slice(0, 60)}`);
       }
       rows.push("");
-      rows.push("=== version/platform ===");
-      rows.push(String((app as Record<string, unknown>).version ?? "no version"));
-      rows.push(String((app as Record<string, unknown>).platform ?? "no platform"));
-      rows.push("");
       rows.push("=== initDataUnsafe ===");
       rows.push(JSON.stringify((app as Record<string, unknown>).initDataUnsafe ?? null, null, 2).slice(0, 800));
+      rows.push("");
+      rows.push("=== requestContact test ===");
+      const rc = (app as { requestContact?: unknown }).requestContact;
+      rows.push(`typeof requestContact = ${typeof rc}`);
       setInfo(rows.join("\n"));
     })();
     return () => { cancelled = true; };

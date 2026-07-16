@@ -95,20 +95,38 @@ export default function MiniAppRenderer({
       setPhoneState({ kind: "error", message: "Preview: реальный запрос номера доступен только в MAX." });
       return;
     }
-    const w = window as unknown as {
-      WebApp?: {
-        requestContact?: () => Promise<{ phone: string; authDate: string; hash: string }>;
-        initDataUnsafe?: { user?: { id?: number } };
-      };
+    type MaxWebApp = {
+      requestContact?: () => Promise<{ phone: string; authDate: string; hash: string }>;
+      initDataUnsafe?: { user?: { id?: number } };
+      ready?: () => void | Promise<void>;
+      expand?: () => void;
     };
+    const w = window as unknown as { WebApp?: MaxWebApp };
+    // Ждём когда SDK-скрипт подгрузится (может ещё грузиться при первом клике)
+    let attempts = 0;
+    while (!w.WebApp && attempts < 20) {
+      await new Promise((r) => setTimeout(r, 100));
+      attempts++;
+    }
     const sdk = w.WebApp;
-    if (!sdk?.requestContact) {
-      setPhoneState({ kind: "error", message: "Откройте страницу в приложении MAX, чтобы поделиться контактом." });
+    if (!sdk) {
+      setPhoneState({ kind: "error", message: "SDK MAX не загрузился. Откройте страницу в приложении MAX." });
+      return;
+    }
+    // Инициируем SDK — часть методов регистрируется после ready/expand
+    try { sdk.ready?.(); sdk.expand?.(); } catch { /* ignore */ }
+    // Даём SDK время дорегистрировать методы после ready()
+    await new Promise((r) => setTimeout(r, 200));
+    if (typeof sdk.requestContact !== "function") {
+      setPhoneState({
+        kind: "error",
+        message: "Метод «поделиться номером» недоступен в этой версии MAX. Обновите приложение.",
+      });
       return;
     }
     const uid = sdk.initDataUnsafe?.user?.id;
     if (!uid) {
-      setPhoneState({ kind: "error", message: "Нет данных пользователя." });
+      setPhoneState({ kind: "error", message: "Нет данных пользователя (возможно откройте по ссылке из канала)." });
       return;
     }
     setPhoneState({ kind: "loading" });
