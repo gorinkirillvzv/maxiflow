@@ -2,21 +2,23 @@
 import { createClient } from "@/lib/supabase/server";
 import { encrypt } from "@/lib/crypto";
 import { createConfirmation } from "@/lib/confirmation";
+import { getActivePlatform } from "@/lib/platform-server";
 
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Не авторизован" }, { status: 401 });
 
-  // Maxiflow — MAX-only продукт. Telegram-боты, если такие остались в БД,
-  // в UI не показываем. Колонку platform в БД оставляем — фильтр только на выборке.
+  // Workspace-switcher: отдаём ботов только активной платформы (cookie mfx_platform).
+  // Все страницы кабинета получают отфильтрованный список автоматически.
+  const platform = await getActivePlatform();
   const { data, error } = await supabase
     .from("bots")
     .select("id, max_bot_username, channel_title, channel_id, is_active, platform, channel_post_url")
-    .eq("platform", "max")
+    .eq("platform", platform)
     .order("created_at", { ascending: false });
   if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json({ bots: data ?? [] });
+  return Response.json({ bots: data ?? [], platform });
 }
 
 export async function POST(request: Request) {

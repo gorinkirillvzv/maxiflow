@@ -11,9 +11,10 @@
 // • TopBar: 56px, translucent + backdrop-blur, breadcrumbs с splitter «•»,
 //   title h2 (24/700), search-заглушка с ⌘K badge, bell с dot, avatar+chevron.
 
-import React, { useState, type ReactNode } from "react";
+import React, { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Icon } from "./Icon";
+import { readPlatform, switchPlatform, type Platform } from "@/lib/platform";
 
 type NavItemDef = { id: string; icon: string; text: string; href: string; chip?: string; count?: string };
 
@@ -125,9 +126,86 @@ function NavItem({ item, active, onNavigate, compact = false }: {
   );
 }
 
+// Workspace-switcher: MAX ⇄ Telegram. Пишет cookie mfx_platform и перезагружает
+// страницу — все API-запросы дальше отдают данные только выбранной платформы.
+function PlatformSwitcher({ platform }: { platform: Platform }) {
+  const items: { id: Platform; label: string; dot: string }[] = [
+    { id: "max",      label: "MAX",      dot: "linear-gradient(135deg,#2E7DFF,#1EC8FF)" },
+    { id: "telegram", label: "Telegram", dot: "linear-gradient(135deg,#29A9EB,#2FB7F0)" },
+  ];
+
+  return (
+    <div style={{ padding: "0 16px 12px" }}>
+      <div
+        role="tablist"
+        aria-label="Платформа"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 2,
+          padding: 3,
+          borderRadius: "var(--r-md)",
+          background: "var(--n-100)",
+        }}
+      >
+        {items.map((it) => {
+          const isActive = platform === it.id;
+          return (
+            <button
+              key={it.id}
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => { if (!isActive) switchPlatform(it.id); }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                height: 30,
+                border: 0,
+                borderRadius: "var(--r-sm)",
+                fontSize: 12.5,
+                fontWeight: isActive ? 700 : 500,
+                cursor: isActive ? "default" : "pointer",
+                background: isActive ? "var(--n-0)" : "transparent",
+                color: isActive ? "var(--brand-ink)" : "var(--n-500)",
+                boxShadow: isActive ? "var(--shadow-sm)" : "none",
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  width: 8, height: 8, borderRadius: 99,
+                  background: it.dot,
+                  opacity: isActive ? 1 : 0.45,
+                }}
+              />
+              {it.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Пункты, доступные только в MAX-режиме (Mini App, посты канала, редирект-трафик,
+// лендинги — везде max.ru-механики). В Telegram-режиме скрываем.
+const MAX_ONLY_NAV = new Set(["mini-app", "posts", "traffic", "landings"]);
+
 function Sidebar({ active, open, onNavigate }: {
   active?: string; open: boolean; onNavigate: () => void;
 }) {
+  // до маунта считаем 'max' (SSR-совместимо), после — реальная платформа из cookie
+  const [platform, setPlatform] = useState<Platform>("max");
+  useEffect(() => { setPlatform(readPlatform()); }, []);
+
+  const groups = platform === "telegram"
+    ? NAV_GROUPS
+        .map((g) => ({ ...g, items: g.items.filter((it) => !MAX_ONLY_NAV.has(it.id)) }))
+        .filter((g) => g.items.length > 0)
+    : NAV_GROUPS;
+
   return (
     <aside
       className={`kk-sidebar${open ? " kk-sidebar--open" : ""}`}
@@ -141,7 +219,7 @@ function Sidebar({ active, open, onNavigate }: {
       }}
     >
       {/* Brand row */}
-      <div style={{ padding: "18px 16px 14px", display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ padding: "18px 16px 10px", display: "flex", alignItems: "center", gap: 12 }}>
         <BrandMark size={30} />
         <div
           className="type-h3"
@@ -158,9 +236,11 @@ function Sidebar({ active, open, onNavigate }: {
         </button>
       </div>
 
+      <PlatformSwitcher platform={platform} />
+
       {/* Main groups */}
       <nav className="kk-scroll" style={{ flex: 1, overflowY: "auto", padding: "4px 10px 10px" }}>
-        {NAV_GROUPS.map((group, gi) => (
+        {groups.map((group, gi) => (
           <div key={gi} style={{ marginBottom: 10 }}>
             {group.label && (
               <div

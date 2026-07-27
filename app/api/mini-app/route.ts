@@ -14,9 +14,11 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Не авторизован" }, { status: 401 });
 
+  // Mini App — MAX-only фича: TG-боты сюда не попадают независимо от свитчера.
   const { data, error } = await supabase
     .from("bots")
     .select("id, max_bot_username, channel_id, channel_title, channel_link, is_active, mini_app_config, mini_app_updated_at")
+    .eq("platform", "max")
     .order("created_at", { ascending: false });
   if (error) return Response.json({ error: error.message }, { status: 500 });
   return Response.json({ bots: data ?? [] });

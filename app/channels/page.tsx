@@ -48,6 +48,11 @@ export default function ChannelsPage() {
 
   useEffect(() => { loadConnected(); }, [loadConnected]);
 
+  // Дефолтный таб формы подключения = активная платформа воркспейса.
+  useEffect(() => {
+    import("@/lib/platform").then((m) => setPlatformTab(m.readPlatform()));
+  }, []);
+
   async function disconnect(b: ConnectedBot) {
     if (!confirm(`Запросить отключение бота «${b.channel_title ?? b.max_bot_username}»? На почту придёт письмо для подтверждения.`)) return;
     setError(null); setInfo(null);
@@ -585,10 +590,11 @@ function PlatformSwitch({ value, onChange }: {
   value: "max" | "telegram";
   onChange: (v: "max" | "telegram") => void;
 }) {
-  // Telegram временно скрыт из UI (мы поддерживаем платформу в БД, но продвигаем только MAX).
-  // Существующие TG-боты продолжат работать; новые подключаем только MAX.
+  // Обе платформы доступны: воркспейс-свитчер в сайдбаре задаёт дефолтный таб,
+  // но здесь можно подключить бота любой платформы.
   const items: { id: "max" | "telegram"; label: string; icon: React.ReactNode; color: string }[] = [
     { id: "max",      label: "MAX",      icon: <MaxLogo />,      color: "#2E7DFF" },
+    { id: "telegram", label: "Telegram", icon: <TelegramLogo />, color: "#29A9EB" },
   ];
   return (
     <div style={{
