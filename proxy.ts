@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { rateLimit, rateHeaders, clientIp } from "@/lib/rate-limit";
 
-const PUBLIC_PREFIXES = ["/login", "/register", "/auth", "/r/", "/l/", "/g/", "/m/", "/bc/", "/confirm/", "/lp/", "/api/mini/", "/help", "/sitemap.xml", "/robots.txt"];
+const PUBLIC_PREFIXES = ["/login", "/register", "/auth", "/r/", "/l/", "/g/", "/m/", "/bc/", "/confirm/", "/lp/", "/api/mini/", "/help", "/sitemap.xml", "/robots.txt", "/privacy-fb", "/policy-fb"];
 
 // IP-лимиты для разных путей (запросов / окно мс).
 // Срабатывают ДО auth — защищают от перебора и абуза публичных эндпоинтов.
