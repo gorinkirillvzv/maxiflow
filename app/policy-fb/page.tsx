@@ -2,7 +2,8 @@ export const metadata = { title: "Удаление данных — Maxiflow" };
 
 export default function PolicyFbPage() {
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 20px 80px", lineHeight: 1.6, color: "#222" }}>
+    <div style={{ minHeight: "100vh", background: "#fff" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 20px 80px", lineHeight: 1.6, color: "#222" }}>
       <h1 style={{ fontSize: 26, marginBottom: 8 }}>Удаление пользовательских данных</h1>
       <p style={{ color: "#666", marginBottom: 32 }}>Инструкция для пользователей, взаимодействовавших с Instagram-аккаунтом, подключённым к Maxiflow.</p>
 
@@ -27,6 +28,7 @@ export default function PolicyFbPage() {
         Подробнее о том, какие данные собираются и зачем — на странице{" "}
         <a href="/privacy-fb">maxiflow.ru/privacy-fb</a>.
       </p>
+      </div>
     </div>
   );
 }

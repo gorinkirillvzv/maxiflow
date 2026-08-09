@@ -2,7 +2,8 @@ export const metadata = { title: "Политика конфиденциальн�
 
 export default function PrivacyFbPage() {
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 20px 80px", lineHeight: 1.6, color: "#222" }}>
+    <div style={{ minHeight: "100vh", background: "#fff" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 20px 80px", lineHeight: 1.6, color: "#222" }}>
       <h1 style={{ fontSize: 26, marginBottom: 8 }}>Политика конфиденциальности</h1>
       <p style={{ color: "#666", marginBottom: 32 }}>Действует для интеграции Maxiflow с Instagram/Meta.</p>
 
@@ -40,6 +41,7 @@ export default function PrivacyFbPage() {
       <p>
         По вопросам обработки данных: <a href="mailto:support@maxiflow.ru">support@maxiflow.ru</a>
       </p>
+      </div>
     </div>
   );
 }
