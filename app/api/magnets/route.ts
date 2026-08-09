@@ -9,7 +9,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("magnets")
-    .select("id, bot_id, title, description, delivery_text, is_active, created_at, bots(channel_title)")
+    .select("id, bot_id, title, description, delivery_text, trigger_keyword, is_active, created_at, bots(channel_title)")
     .order("created_at", { ascending: false });
   if (error) return Response.json({ error: error.message }, { status: 500 });
   return Response.json({ magnets: data ?? [] });
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
   // тексты сценария — пишем только заполненные, остальное возьмёт дефолт схемы
   for (const f of [
     "welcome_text", "subscribe_button_text", "check_button_text",
-    "not_subscribed_text", "delivery_text",
+    "not_subscribed_text", "delivery_text", "trigger_keyword",
   ]) {
     if (typeof b[f] === "string" && (b[f] as string).trim()) row[f] = b[f];
   }
