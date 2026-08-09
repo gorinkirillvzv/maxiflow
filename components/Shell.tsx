@@ -126,12 +126,13 @@ function NavItem({ item, active, onNavigate, compact = false }: {
   );
 }
 
-// Workspace-switcher: MAX ⇄ Telegram. Пишет cookie mfx_platform и перезагружает
-// страницу — все API-запросы дальше отдают данные только выбранной платформы.
+// Workspace-switcher: MAX ⇄ Telegram ⇄ Instagram. Пишет cookie mfx_platform и
+// перезагружает страницу — все API-запросы дальше отдают данные только выбранной платформы.
 function PlatformSwitcher({ platform }: { platform: Platform }) {
   const items: { id: Platform; label: string; dot: string }[] = [
-    { id: "max",      label: "MAX",      dot: "linear-gradient(135deg,#2E7DFF,#1EC8FF)" },
-    { id: "telegram", label: "Telegram", dot: "linear-gradient(135deg,#29A9EB,#2FB7F0)" },
+    { id: "max",       label: "MAX",       dot: "linear-gradient(135deg,#2E7DFF,#1EC8FF)" },
+    { id: "telegram",  label: "Telegram",  dot: "linear-gradient(135deg,#29A9EB,#2FB7F0)" },
+    { id: "instagram", label: "Instagram", dot: "linear-gradient(135deg,#F58529,#DD2A7B,#8134AF)" },
   ];
 
   return (
@@ -141,7 +142,7 @@ function PlatformSwitcher({ platform }: { platform: Platform }) {
         aria-label="Платформа"
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          gridTemplateColumns: "1fr 1fr 1fr",
           gap: 2,
           padding: 3,
           borderRadius: "var(--r-md)",
@@ -200,7 +201,7 @@ function Sidebar({ active, open, onNavigate }: {
   const [platform, setPlatform] = useState<Platform>("max");
   useEffect(() => { setPlatform(readPlatform()); }, []);
 
-  const groups = platform === "telegram"
+  const groups = platform !== "max"
     ? NAV_GROUPS
         .map((g) => ({ ...g, items: g.items.filter((it) => !MAX_ONLY_NAV.has(it.id)) }))
         .filter((g) => g.items.length > 0)

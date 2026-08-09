@@ -13,8 +13,14 @@ type ConnectedBot = {
   channel_title: string | null;
   channel_id: number | null;
   is_active: boolean;
-  platform?: "max" | "telegram";
+  platform?: "max" | "telegram" | "instagram";
   channel_post_url?: string | null;
+};
+
+const PLATFORM_STYLE: Record<"max" | "telegram" | "instagram", { gradient: string; label: string }> = {
+  max:       { gradient: "linear-gradient(135deg,#2E7DFF,#1EC8FF)",         label: "MAX" },
+  telegram:  { gradient: "linear-gradient(135deg,#29A9EB,#2FB7F0)",         label: "Telegram" },
+  instagram: { gradient: "linear-gradient(135deg,#F58529,#DD2A7B,#8134AF)", label: "Instagram" },
 };
 
 const STEPS = [
@@ -39,7 +45,7 @@ export default function ChannelsPage() {
   const [deleteForId, setDeleteForId] = useState<string | null>(null);
   const [deleteTyped, setDeleteTyped] = useState("");
   const [info, setInfo] = useState<string | null>(null);
-  const [platformTab, setPlatformTab] = useState<"max" | "telegram">("max");
+  const [platformTab, setPlatformTab] = useState<"max" | "telegram" | "instagram">("max");
 
   const loadConnected = useCallback(async () => {
     const d = await fetch("/api/bots").then((r) => r.json());
@@ -186,6 +192,7 @@ export default function ChannelsPage() {
               {connected.map((b) => {
                 const expected = b.channel_title ?? b.max_bot_username;
                 const isDeleteForm = deleteForId === b.id;
+                const pstyle = PLATFORM_STYLE[b.platform ?? "max"];
                 return (
                   <div key={b.id} className="kk-col kk-gap-2" style={{
                     padding: 12, borderRadius: 10,
@@ -195,18 +202,20 @@ export default function ChannelsPage() {
                     <div className="kk-row kk-gap-3">
                       <div style={{
                         width: 40, height: 40, borderRadius: 10,
-                        background: "linear-gradient(135deg,#2E7DFF,#1EC8FF)",
+                        background: pstyle.gradient,
                         color: "#fff", display: "grid", placeItems: "center", flexShrink: 0,
                       }}>
-                        <Icon name="max" size={20} />
+                        {b.platform === "telegram" ? <TelegramLogo size={20} />
+                          : b.platform === "instagram" ? <InstagramLogo size={20} />
+                          : <Icon name="max" size={20} />}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="kk-row kk-gap-2" style={{ alignItems: "center" }}>
                           <div style={{ fontWeight: 600, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {b.channel_title ?? b.max_bot_username}
                           </div>
-                          <span className="kk-chip" style={{ height: 20, fontSize: 11, background: "linear-gradient(135deg,#2E7DFF,#1EC8FF)", color: "#fff" }}>
-                            MAX
+                          <span className="kk-chip" style={{ height: 20, fontSize: 11, background: pstyle.gradient, color: "#fff" }}>
+                            {pstyle.label}
                           </span>
                           {b.is_active ? (
                             <span className="kk-chip kk-chip-green" style={{ height: 20, fontSize: 11 }}>Активен</span>
@@ -313,6 +322,8 @@ export default function ChannelsPage() {
 
           {platformTab === "telegram" ? (
             <TelegramConnect onConnected={() => { setShowAddForm(false); loadConnected(); }} />
+          ) : platformTab === "instagram" ? (
+            <InstagramConnect />
           ) : (
           <>
           <div className="kk-row kk-gap-3" style={{ marginBottom: 24 }}>
@@ -492,6 +503,33 @@ function TelegramConnect({ onConnected }: { onConnected: () => void }) {
   );
 }
 
+function InstagramConnect() {
+  return (
+    <>
+      <div className="kk-row kk-gap-3" style={{ marginBottom: 24 }}>
+        <div style={{ width: 56, height: 56, borderRadius: 14, background: "linear-gradient(135deg,#F58529,#DD2A7B,#8134AF)", color: "#fff", display: "grid", placeItems: "center" }}>
+          <InstagramLogo size={28} />
+        </div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.01em" }}>Подключите Instagram</div>
+          <div className="kk-sm kk-muted">Каскад будет отвечать на комментарии в директ и вести диалоги</div>
+        </div>
+      </div>
+
+      <div className="kk-col kk-gap-3" style={{ marginBottom: 18 }}>
+        <Step n={1} t="Профессиональный аккаунт" d="Instagram-аккаунт должен быть Business или Creator (не личный)." />
+        <Step n={2} t="Войди через Instagram" d="Откроется окно входа Meta — разреши доступ к сообщениям и комментариям." />
+        <Step n={3} t="Готово" d="Каскад подключит аккаунт и начнёт получать комментарии и сообщения." />
+      </div>
+
+      <a href="/api/oauth/instagram/start" className="kk-btn kk-btn-accent kk-btn-lg"
+        style={{ width: "100%", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+        Подключить через Instagram <Icon name="arrow_r" size={14} />
+      </a>
+    </>
+  );
+}
+
 function Step({ n, t, d }: { n: number; t: string; d: string }) {
   return (
     <div className="kk-row kk-gap-3" style={{ alignItems: "flex-start", padding: 14, borderRadius: 12, background: "var(--n-50)" }}>
@@ -519,6 +557,15 @@ function TelegramLogo({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
       <path d="M21.5 4.4 18 19.6c-.3 1.1-1 1.4-2 .9l-5.5-4-2.6 2.6c-.3.3-.6.6-1.2.6l.4-5.6 10.3-9.3c.5-.4-.1-.6-.7-.3l-12.7 8L.5 11.6c-1.2-.4-1.2-1.2.3-1.8l19-7.3c1-.4 1.9.2 1.7 1.9z"/>
+    </svg>
+  );
+}
+function InstagramLogo({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5.5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -587,14 +634,15 @@ function PostUrlEditor({ bot, onSaved }: { bot: ConnectedBot; onSaved: () => voi
 }
 
 function PlatformSwitch({ value, onChange }: {
-  value: "max" | "telegram";
-  onChange: (v: "max" | "telegram") => void;
+  value: "max" | "telegram" | "instagram";
+  onChange: (v: "max" | "telegram" | "instagram") => void;
 }) {
-  // Обе платформы доступны: воркспейс-свитчер в сайдбаре задаёт дефолтный таб,
+  // Все платформы доступны: воркспейс-свитчер в сайдбаре задаёт дефолтный таб,
   // но здесь можно подключить бота любой платформы.
-  const items: { id: "max" | "telegram"; label: string; icon: React.ReactNode; color: string }[] = [
-    { id: "max",      label: "MAX",      icon: <MaxLogo />,      color: "#2E7DFF" },
-    { id: "telegram", label: "Telegram", icon: <TelegramLogo />, color: "#29A9EB" },
+  const items: { id: "max" | "telegram" | "instagram"; label: string; icon: React.ReactNode; color: string }[] = [
+    { id: "max",       label: "MAX",       icon: <MaxLogo />,       color: "#2E7DFF" },
+    { id: "telegram",  label: "Telegram",  icon: <TelegramLogo />,  color: "#29A9EB" },
+    { id: "instagram", label: "Instagram", icon: <InstagramLogo />, color: "#DD2A7B" },
   ];
   return (
     <div style={{

@@ -3,19 +3,19 @@
 // fetch-запросы к нашим API и читается в server components через next/headers.
 // localStorage дублируем только для мгновенной отрисовки свитчера до гидрации.
 
-export type Platform = "max" | "telegram";
+export type Platform = "max" | "telegram" | "instagram";
 
 export const PLATFORM_COOKIE = "mfx_platform";
 const LS_KEY = "mfx.platform";
 
 export function isPlatform(v: unknown): v is Platform {
-  return v === "max" || v === "telegram";
+  return v === "max" || v === "telegram" || v === "instagram";
 }
 
 /** Клиент: прочитать активную платформу (cookie → localStorage → 'max'). */
 export function readPlatform(): Platform {
   if (typeof document === "undefined") return "max";
-  const m = document.cookie.match(new RegExp(`(?:^|;\\s*)${PLATFORM_COOKIE}=(max|telegram)`));
+  const m = document.cookie.match(new RegExp(`(?:^|;\\s*)${PLATFORM_COOKIE}=(max|telegram|instagram)`));
   if (m && isPlatform(m[1])) return m[1];
   try {
     const ls = localStorage.getItem(LS_KEY);
